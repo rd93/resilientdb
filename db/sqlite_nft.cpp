@@ -5,14 +5,14 @@
 
 // Private methods
 
-int SQLite::callback(void *x, int nCol, char **colValue, char **colNames)
+int SQLiteNFT::callback(void *x, int nCol, char **colValue, char **colNames)
 {
     res_data *data = (res_data *)x;
     //std::cout << "DATA returned from " << data->op << " operation" << std::endl;
 
     if (data->results.size() == 0) {
         // Store column names for debugging
-        data->results.push_back(std::vector<std::string>());
+        data->results.push_back(std::vector<struct nft_products>());
         for (int i = 0; i < nCol; i++)
         {
             data->results.back().push_back(colNames[i]);
@@ -27,9 +27,14 @@ int SQLite::callback(void *x, int nCol, char **colValue, char **colNames)
     return 0;
 }
 
-int SQLite::createTable(const std::string tableName) {
+int SQLiteNFT::createTable(const std::string tableName) {
     std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + "("
-                                                                    "ID      CHAR(64) PRIMARY KEY    NOT NULL,"
+                                                                    "ID       CHAR(64) PRIMARY KEY    NOT NULL,"
+                                                                    "OWNER_ID CHAR(64) NOT NULL,"
+                                                                    "OWNER_FIRST_NAME TEXT  NOT NULL,"
+                                                                    "OWNER_LAST_NAME TEXT  NOT NULL,"
+                                                                    "PRODUCT_NAME TEXT  NOT NULL,"
+                                                                    "PRODUCT_ABOUT TEXT NOT"
                                                                     "VALUE    TEXT                    NOT NULL);";
 
     int rc = sqlite3_exec(*db, query.c_str(), this->callback, 0, nullptr);
@@ -46,11 +51,11 @@ int SQLite::createTable(const std::string tableName) {
 }
 
 // Public methods
-SQLite::SQLite() {
+SQLiteNFT::SQLiteNFT() {
     _dbInstance = "nft_resilientdb";
 }
 
-int SQLite::Open(const std::string dbName) {
+int SQLiteNFT::Open(const std::string dbName) {
 
     std::string sqliteName = dbName;
     int rc = sqlite3_open(sqliteName.c_str(), db);
@@ -73,12 +78,12 @@ int SQLite::Open(const std::string dbName) {
     return rc;
 }
 
-std::string SQLite::Get(const std::string key)
+std::vector<nft_products> SQLiteNFT::GetAllProducts()
 {
-    std::string value;
+    std::vector<nft_products> value;
     res_data res("GET");
 
-    std::string query = "SELECT KEY, VALUE FROM " + this->table + " WHERE KEY = '" + key + "';";
+    std::string query = "SELECT * " + this->table + ";";
     int rc = sqlite3_exec(*db, query.c_str(), this->callback, (void *)&res, nullptr);
     if (rc != SQLITE_OK)
     {
@@ -101,13 +106,13 @@ std::string SQLite::Get(const std::string key)
     {
         // skip first row that contains the COLUMN name
         // skip first row that contains the KEY and return VALUE
-        value = res.results[1][1];
+        value = res.results;
     }
 
     return value;
 }
 
-std::string SQLite::Put(const std::string key, const std::string value)
+bool SQLiteNFT::InsertProduct(struct nft_products product)
 {
     std::string query;
     res_data res("PUT");
