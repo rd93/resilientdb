@@ -12,8 +12,19 @@
  * interface for managing any king of database 
  * that supports key-value pair
  */
-class DataBase
-{
+
+
+struct nft_products {
+    int id;
+    int owner_id;
+    string first_name_owner;
+    string last_name_owner;
+    string name_product;
+    string about_product;
+    string hash_product;
+};
+
+class DataBase {
 protected:
     std::string _dbInstance;
 
@@ -66,6 +77,7 @@ public:
     }
 };
 
+
 class SQLite : public DataBase
 {
 private:
@@ -86,6 +98,29 @@ public:
     int Open(const std::string = "db");
     std::string Get(const std::string key);
     std::string Put(const std::string key, const std::string value);
+    int SelectTable(const std::string tableName);
+    int Close(const std::string = "db");
+};
+
+class SQLiteNFT : public DataBase {
+private:
+    typedef struct _res_data
+    {
+        std::vector<struct nft_products> results;
+        std::string op;
+        _res_data(const std::string &opType) : op(opType) {}
+    } res_data;
+
+    sqlite3 **db = new sqlite3 *();
+    std::string table;
+    int static callback(void *data, int nCol, char **colValue, char **colNames);
+    int createTable(const std::string tableName);
+
+public:
+    SQLiteNFT();
+    int Open(const std::string = "db");
+    std::vector<nft_products> GetAllProducts();
+    bool PutProduct(struct nft_products product);
     int SelectTable(const std::string tableName);
     int Close(const std::string = "db");
 };
