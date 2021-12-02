@@ -1,6 +1,7 @@
 #include "global.h"
 #include "smart_contract.h"
 #include "smart_contract_txn.h"
+#include "smart_nft_contract.h"
 
 #if BANKING_SMART_CONTRACT
 /*
@@ -23,6 +24,21 @@ uint64_t TransferMoneySmartContract::execute()
     return 0;
 }
 
+uint64_t TransferNFTSmartContract::execute()
+{   
+    //  transfer only one token from the source to the destination and make the source empty
+    string source_val = db->Get(std::to_string(this->source_id));
+
+    if (!source_val.empty())
+    {
+        string url_frm_source = db->Get(std::to_string(this->source_id));
+        db->Put(std::to_string(this->dest_id), url_frm_source);
+        db->Put(std::to_string(this->source_id), "");
+        return 1;
+
+    }
+    return 0;
+}
 /*
 returns:
      1 for commit 
@@ -33,6 +49,17 @@ uint64_t DepositMoneySmartContract::execute()
     uint64_t dest = temp.empty() ? 0 : stoi(temp);
     db->Put(std::to_string(this->dest_id), std::to_string(dest + amount));
     return 1;
+}
+
+uint64_t DepositNFTSmartContract::execute()
+{
+    string temp = db->Get(std::to_string(this->dest_id));
+    if (temp.empty())
+    {
+        db->Put(std::to_string(this->dest_id), url);
+        return 1;
+    }
+    return 0;
 }
 
 /*

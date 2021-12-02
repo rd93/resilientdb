@@ -3,7 +3,7 @@
 #include "global.h"
 #include "wl.h"
 
-#if BANKING_SMART_CONTRACT
+// #if BANKING_SMART_CONTRACT
 
 class SmartContract
 {
@@ -45,6 +45,26 @@ class WithdrawMoneySmartContract : public SmartContract
 public:
     uint64_t source_id;
     uint64_t amount;
+    uint64_t execute();
+};
+
+class TransferNFTSmartContract : public SmartContract
+{
+public:
+    uint64_t source_id;
+    uint64_t dest_id;
+    uint64_t amount;
+    // problem for later
+    string url;
+    uint64_t execute();
+};
+
+class DepositNFTSmartContract : public SmartContract
+{
+public:
+    uint64_t dest_id;
+    uint64_t amount;
+    string url;
     uint64_t execute();
 };
 

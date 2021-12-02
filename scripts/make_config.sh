@@ -141,7 +141,7 @@ echo -e "#define PARTITIONED 0" >> config.h
 echo -e "#define REPLICATED 1" >> config.h
 echo -e "// To select the amount of time to warmup and run." >> config.h
 echo -e "#define DONE_TIMER 1 * 60 * BILLION" >> config.h
-echo -e "#define WARMUP_TIMER  5 * BILLION" >> config.h
+echo -e "#define WARMUP_TIMER  60 * BILLION" >> config.h
 echo -e "// Select the consensus algorithm to run." >> config.h
 echo -e "#define CONSENSUS PBFT" >> config.h
 echo -e "#define PBFT 2" >> config.h

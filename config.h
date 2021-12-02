@@ -134,7 +134,7 @@
 #define REPLICATED 1
 // To select the amount of time to warmup and run.
 #define DONE_TIMER 1 * 60 * BILLION
-#define WARMUP_TIMER  5 * BILLION
+#define WARMUP_TIMER  60 * BILLION
 // Select the consensus algorithm to run.
 #define CONSENSUS PBFT
 #define PBFT 2
@@ -195,7 +195,7 @@
 #define SQL_PERSISTENT 3
 
 // To allow testing of a Banking Smart Contracts.
-#define BANKING_SMART_CONTRACT false
+#define BANKING_SMART_CONTRACT true
 
 #endif
 
