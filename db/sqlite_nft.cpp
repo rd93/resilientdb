@@ -29,13 +29,14 @@ int SQLiteNFT::callback(void *x, int nCol, char **colValue, char **colNames)
 
 int SQLiteNFT::createTable(const std::string tableName) {
     std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + "("
-                                                                    "ID       CHAR(64) PRIMARY KEY    NOT NULL,"
-                                                                    "OWNER_ID CHAR(64) NOT NULL,"
+                                                                    "ID       INT PRIMARY KEY    NOT NULL,"
+                                                                    "OWNER_ID INT UNIQUE NOT NULL,"
                                                                     "OWNER_FIRST_NAME TEXT  NOT NULL,"
                                                                     "OWNER_LAST_NAME TEXT  NOT NULL,"
                                                                     "PRODUCT_NAME TEXT  NOT NULL,"
-                                                                    "PRODUCT_ABOUT TEXT NOT"
-                                                                    "VALUE    TEXT                    NOT NULL);";
+                                                                    "PRODUCT_ABOUT TEXT NOT NULL,"
+                                                                    "PRODUCT_HASH TEXT UNIQUE NOT NULL,"
+                                                                    "PRODUCT_PRICE INT NOT NULL);";
 
     int rc = sqlite3_exec(*db, query.c_str(), this->callback, 0, nullptr);
 
@@ -83,7 +84,7 @@ std::vector<nft_products> SQLiteNFT::GetAllProducts()
     std::vector<nft_products> value;
     res_data res("GET");
 
-    std::string query = "SELECT * " + this->table + ";";
+    std::string query = "SELECT * FROM " + this->table + ";";
     int rc = sqlite3_exec(*db, query.c_str(), this->callback, (void *)&res, nullptr);
     if (rc != SQLITE_OK)
     {
@@ -112,28 +113,48 @@ std::vector<nft_products> SQLiteNFT::GetAllProducts()
     return value;
 }
 
+nft_products SQLiteNFT::GetSingleProduct(std::string hash)
+{
+    nft_products value;
+    res_data res("GET");
+
+    std::string query = "SELECT * FROM " + this->table + " where PRODUCT_HASH =" + hash + ";";
+    int rc = sqlite3_exec(*db, query.c_str(), this->callback, (void *)&res, nullptr);
+    if (rc != SQLITE_OK)
+    {
+        std::cerr << "query: " << query << std::endl;
+        std::cerr << "[GET]: SQL error " << rc << ": " << sqlite3_errmsg(*db) << std::endl;
+        assert(0);
+        return value;
+    }
+
+
+
+    if (res.results.size()){
+        // skip first row that contains the COLUMN name
+        // skip first row that contains the KEY and return VALUE
+        value = res.results[1];
+    }
+
+    return value;
+}
+
 bool SQLiteNFT::InsertProduct(struct nft_products product)
 {
     std::string query;
     res_data res("PUT");
 
-    std::string prev = Get(key);
+    nft_products prev = GetSingleProduct(product.hash_product);
     // If the value to be inserted is the same, just return
-    if (value == prev)
+    if (prev.hash_product.size())
     {
-        return prev;
+        return false;
     }
 
-    if (prev.size())
-    {
-        //std::cout << "Updating the value" << std::endl;
-        query = "UPDATE " + this->table + " set VALUE = '" + value + "' where KEY = '" + key + "';";
-    }
-    else
-    {
-        //std::cout << "Inserting the value" << std::endl;
-        query = "INSERT INTO " + table + " (KEY, VALUE) VALUES('" + key + "', '" + value + "');";
-    }
+
+    query = "INSERT INTO " + table + " (OWNER_ID, OWNER_FIRST_NAME, OWNER_LAST_NAME, PRODUCT_NAME, PRODUCT_ABOUT, PRODUCT_HASH, PRODUCT_PRICE)"
+                    "VALUES('" + product.owner_id + "', '" + product.first_name_owner + "');";
+    
 
     int rc = sqlite3_exec(*db, query.c_str(), this->callback, (void *)&res, nullptr);
     if (rc != SQLITE_OK)
@@ -141,9 +162,10 @@ bool SQLiteNFT::InsertProduct(struct nft_products product)
         std::cerr << "query: " << query << std::endl;
         std::cerr << "[PUT]: Error executing SQLite query: " << sqlite3_errmsg(*db) << std::endl;
         assert(0);
+        return false;
     }
 
-    return prev;
+    return true;
 }
 
 int SQLite::SelectTable(const std::string tableName) {

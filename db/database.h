@@ -17,6 +17,7 @@
 struct nft_products {
     int id;
     int owner_id;
+    int price;
     string first_name_owner;
     string last_name_owner;
     string name_product;
@@ -120,7 +121,8 @@ public:
     SQLiteNFT();
     int Open(const std::string = "db");
     std::vector<nft_products> GetAllProducts();
-    bool PutProduct(struct nft_products product);
+    struct nft_products GetSingleProduct(std::string hash = "");
+    bool InsertProduct(struct nft_products product);
     int SelectTable(const std::string tableName);
     int Close(const std::string = "db");
 };
